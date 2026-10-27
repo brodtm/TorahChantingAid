@@ -130,4 +130,5 @@ None — no auth in this MVP.
 - Save to Github failed ("not a git repository"): /app had no .git. Added /app/.gitignore (node_modules, caches, build) and ran `git init -b main` + initial commit (86 files, largest 39MB demo mp4, all <100MB GitHub limit).
 - Added /app/README.md (features, stack, structure, setup, usage, API reference, testing, credits).
 - Added /app/PROMPT.md (full build prompt to regenerate the project).
+- Added /app/assets/ with Tikkun-Koreim-HB50656.pdf (35 MB, user upload) + assets/README.md. Original Emor input video, frames and /tmp/torah_video render scripts were lost on fork (temp storage), not recoverable.
 

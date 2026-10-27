@@ -141,6 +141,9 @@ cd backend
 pytest tests/ -v
 ```
 
+## Source and test files
+[`assets/`](assets/) holds the Tikkun Koreim PDF used to build the column map. Test reports are in [`test_reports/`](test_reports/).
+
 ## Rebuilding from scratch
 [`PROMPT.md`](PROMPT.md) holds the full prompt for rebuilding this project with an AI app builder.
 
