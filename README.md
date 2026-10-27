@@ -141,6 +141,9 @@ cd backend
 pytest tests/ -v
 ```
 
+## Rebuilding from scratch
+[`PROMPT.md`](PROMPT.md) holds the full prompt for rebuilding this project with an AI app builder.
+
 ## Credits
 - Hebrew text, cantillation and aliyah data: [Sefaria](https://www.sefaria.org) (fetched once at build time).
 - OCR: [Tesseract.js](https://github.com/naptha/tesseract.js). Hand tracking: [MediaPipe](https://developers.google.com/mediapipe).

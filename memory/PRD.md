@@ -129,4 +129,5 @@ None — no auth in this MVP.
 - User asked to push to https://github.com/brodtm/TorahChantingAid.git; directed to the "Save to Github" chat feature (agent cannot push directly). No code changes.
 - Save to Github failed ("not a git repository"): /app had no .git. Added /app/.gitignore (node_modules, caches, build) and ran `git init -b main` + initial commit (86 files, largest 39MB demo mp4, all <100MB GitHub limit).
 - Added /app/README.md (features, stack, structure, setup, usage, API reference, testing, credits).
+- Added /app/PROMPT.md (full build prompt to regenerate the project).
 
