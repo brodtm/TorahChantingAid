@@ -1,0 +1,14 @@
+node_modules/
+**/node_modules/
+frontend/build/
+__pycache__/
+*.pyc
+.ruff_cache/
+.DS_Store
+.env
+.env.*
+*.env
+credentials.json
+*.pem
+*.key
+.credentials

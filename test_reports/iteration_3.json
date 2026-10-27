@@ -1,0 +1,36 @@
+{
+  "summary": "Iteration 3 — full backend regression after locate() refactor into 5 helpers (_filter_pool, _ngrams, _score_per_verse, _score_sliding_window, _build_location). 28/28 pytest tests passed in 5.58s. Added 4 new tests targeting the refactored helpers: mangled OCR Genesis 1:26 (3-gram fuzzy), compact<18 early-exit returns null, hint_book pool restriction, and Genesis 1:5 lines with cantillation. All previous behavior preserved — no regressions.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_torah_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py is 860 lines — close to the 700-line guideline; consider splitting locate/lines/index helpers into a dedicated module (e.g. torah_search.py) for maintainability.",
+    "_score_sliding_window rebuilds the by_chapter map on every request and recomputes _ngrams inside the max() key lambda — fine at 15,887 verses but worth precomputing per-verse n-gram sets at index build time if QPS grows.",
+    "_filter_pool does sequential O(N) filters per request — acceptable now; if hint_book/category usage scales, pre-bucketing the index by (category, book, chapter) would be cheaper.",
+    "Magic constants (_MIN_COMPACT_LEN=18, _MIN_SCORE=0.18, _MIN_INTER_VERSE=3, _MIN_INTER_WINDOW=4) are well-named but not documented; a short comment block explaining the tuning rationale would help future maintainers."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_torah_api.py"
+  ],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "not tested (skipped per request)"
+  },
+  "test_credentials": "N/A — no auth in this app",
+  "seed_data_creation": "Test sessions created with TEST_ prefix (TEST_session, TEST_calib); cleanup not required since they are isolated UUIDs.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "test_torah_api.py is the canonical regression suite (28 tests). New locate-refactor coverage added: test_locate_compact_below_min_returns_null, test_locate_mangled_ocr_genesis_1_26, test_locate_hint_book_restricts_pool, test_lines_genesis_1_5_active_prev_next_teamim. Index is auto-built via the session-scoped ensure_index fixture hitting POST /api/index/build. BASE_URL falls back to the preview URL but reads REACT_APP_BACKEND_URL when present.",
+  "rca of the issue": "No issues — refactor is behavior-preserving. Verified: Genesis 1:1 → conf 1.0; OCR-mangled Genesis 1:26 resolved via 3-gram fuzzy; Esther 3:1 → category=megillot; Judges 5:1 → haftarah_for=Beshalach; Esther 1:1 lines have empty previous (no cross-book bleed); compact<18 snippet returns null (early exit) without 400; hint_book correctly restricts pool to Esther."
+}

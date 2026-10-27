@@ -1,0 +1,54 @@
+{
+  "summary": "Iteration 4 — backend regression + new column-map subsystem coverage. 48/50 pytest tests pass (22 new scroll tests + 28 pre-existing torah tests, 2 fail). The 2 failures are real backend bugs in locate_column: (a) margin is too small on clean Bereshit 1:1 (0.083, expected >0.3) because frequent Hebrew trigrams like אלהים/השמים/הארץ also appear in 22+ other columns and the recall metric doesn't penalize length mismatch; (b) tie-breaker bias: when multiple columns tie on confidence, sort(reverse=True) on tuples (recall, column, inter) prefers the HIGHER column number, so a mangled OCR Gen 1:26 snippet that ties col 2 and col 203 returns col 203 instead of the expected first-10-columns. All other endpoints (profiles list, profile meta, get-column, line-at, /api/health 15887 verses, /api/torah/*, /api/sessions, /api/calibration) work correctly with no _id leakage.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "POST /api/scroll/locate-column",
+        "issue": "Tie-breaker bias toward higher column numbers. For mangled OCR snippet 'יאמור אלתיב נעשיה אדם בצלבנו בדמותנו וירדו' col 2 and col 203 tie at confidence 0.559 with margin 0.0. scroll_profiles.locate_column does scored.sort(reverse=True) on tuples (recall, column, inter) which makes col 203 win. Expected: a column in the first 10 (Bereshit area). Fix: prefer lower column on ties, or break ties by max(letter_count) overlap, or sort by (recall, -column).",
+        "priority": "HIGH"
+      },
+      {
+        "endpoint": "POST /api/scroll/locate-column",
+        "issue": "Margin too small on clean Bereshit 1:1 snippet (0.083, expected >0.3). Confidence is correctly 1.0 and column=1 is correct, but runner-ups (col 206, col 85) return 0.917 because the recall metric only looks at intersection / |snippet_ngrams|. Two fixes possible: (1) use Jaccard intersection / union (currently it's recall-only), or (2) add length-normalisation so columns containing all trigrams plus 1000 unrelated trigrams don't score so high. Without this, downstream UI cannot use 'margin' as a lock-in threshold.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_scroll_profiles.py",
+    "/app/backend/tests/test_torah_api.py",
+    "/app/test_reports/pytest/pytest_results.xml",
+    "/app/test_reports/pytest/scroll_profiles_results.xml"
+  ],
+  "action_items": [
+    "Fix locate_column tie-breaker in /app/backend/scroll_profiles.py: change scored.sort(reverse=True) to a key that prefers lower column number or greater intersection size on equal recall (e.g. scored.sort(key=lambda x: (-x[0], -x[2], x[1])))",
+    "Replace recall-only scoring with Jaccard or recall+precision combination so margin is meaningful. Currently confidence = |inter|/|snippet_ngrams| ignores column-side noise, causing high-margin guarantees to fail",
+    "Optional: keep recall=1.0 semantics but compute margin against the *runner-up that doesn't fully contain the snippet* — currently col 206 also fully contains the snippet's trigrams (because 'אלהים', 'השמים', 'הארץ' are common Torah trigrams)"
+  ],
+  "critical_code_review_comments": [
+    "scroll_profiles.locate_column uses recall = |inter|/|snippet_ngrams| as 'confidence'. This metric is monotonic in snippet coverage and indifferent to column length — a 30-char snippet covered by a 1500-trigram column scores identically to one covered by a 30-trigram column. This is the root cause of the low margin on the Bereshit snippet.",
+    "scored.sort(reverse=True) on tuples sorts (recall, column, inter) descending — so on ties, larger column number wins. If we want 'when in doubt, pick the column that needs fewer trigrams to explain the snippet' we should sort by (recall desc, letter_count asc) or break ties by intersection size.",
+    "scroll_profiles.py (180 lines) and server.py (940 lines): server.py is over the 700-line guideline; the new /api/scroll/* routes (lines 862-925) plus the locate helpers should be moved into a torah_search.py / scroll_routes.py module.",
+    "scroll_profiles.locate_column return dict contains 'matched_ngrams' (an int) — name is misleading; rename to 'matched_ngram_count'.",
+    "scroll_profiles._search_index is module-global and never invalidated — fine for read-only profile JSON, but if profiles ever become editable this leaks stale data."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_scroll_profiles.py (NEW — 22 tests covering all scroll-profile/column-map endpoints + regression)"
+  ],
+  "success_rate": {
+    "backend": "96% (48/50)",
+    "frontend": "not tested (skipped per request)"
+  },
+  "test_credentials": "N/A — no auth in this app",
+  "seed_data_creation": "Test session created with name 'TEST_scroll_regress' as part of regression test (single UUID, no cleanup needed).",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Run pytest on both /app/backend/tests/test_scroll_profiles.py (22 tests, scroll subsystem + regression) and /app/backend/tests/test_torah_api.py (28 tests, torah corpus). The two failing tests are: test_locate_column_clean_bereshit_1_1 (asserts margin > 0.3 — currently 0.083) and test_locate_column_mangled_ocr_genesis_1_26 (asserts column in 1-10 — currently returns 203 due to tie-break bias toward higher column number). Both are real backend issues in scroll_profiles.locate_column, NOT test issues.",
+  "rca of the issue": "Both failures trace to scroll_profiles.locate_column. (1) Confidence metric is recall-only (|s_ng & col_ng| / |s_ng|): when the snippet's trigrams are a subset of common Hebrew letter combinations, many columns achieve recall=1.0, collapsing the margin. (2) Tie-breaking: scored.sort(reverse=True) sorts tuples (recall, column, inter) descending, so identical-confidence ties resolve to the larger column number. Reproduction: POST /api/scroll/locate-column with snippet='בראשית ברא אלהים את השמים ואת הארץ' returns column=1, confidence=1.0, margin=0.083 with col 206 & 85 both at 0.917. POST with snippet='יאמור אלתיב נעשיה אדם בצלבנו בדמותנו וירדו' returns column=203 with col 2 listed as alternate at the same 0.559 confidence. Mitigation: replace recall with Jaccard (|inter|/|union|) or add length-aware penalty; change sort key to prefer lower column on ties, or break ties by intersection size."
+}

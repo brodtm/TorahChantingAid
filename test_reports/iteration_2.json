@@ -1,0 +1,34 @@
+{
+  "summary": "Backend regression + new-feature tests for the Tanakh-expanded Torah Chanting Aid corpus. 24/24 pytest tests passed against the external preview URL. Verified all requested behaviors: /api/health=15887 verses, /api/torah/books grouped by torah(5)/neviim(21)/megillot(5) each entry has en/he/category, /api/torah/haftarot returns 54 entries with parsha_en/book/start/end (Beshalach->Judges 4:4-5:31), chapter retrieval per category (Genesis=torah, Judges=neviim, Esther=megillot, Joshua=neviim) with cantillation preserved, unknown book -> 400, locate works across categories with correct category/parsha/aliyah/haftarah_for fields (Esther snippet -> megillot+nulls, Song-of-Deborah -> Judges/neviim/Beshalach, hint_category restricts pool), lines endpoint returns category-correct metadata and Esther 1:1 prev=[] (no bleed across books), Sessions CRUD + Calibration persist with no _id leakage, CORS allows cross-origin.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/calibration/{session_id}", "issue": "Returns empty {} on missing session instead of 404 (REST hygiene)."},
+      {"endpoint": "/api/torah/locate", "issue": "Returns null body with 200 when no match; clients must handle null. Could be 404 or {found:false}."}
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_torah_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "estimate_aliyah remains O(N) heuristic over the full 15887-verse index; with the larger Tanakh bundle this is now ~3x slower than the Torah-only version. Still acceptable but consider precomputing per-parsha verse counts at index build time.",
+    "find_haftarah_for is O(54) per call and re-scanned for every locate/lines call; trivial cost but could be precomputed into a (book,ch,v)->parsha map for clarity.",
+    "/api/torah/locate scans the entire index linearly per request (now 15887 verses); for OCR snippets this is fine but worth noting as the corpus grows further.",
+    "/api/torah/locate returns null body with 200 when nothing matches — recommend returning 404 or {found:false} for consistent client-side typing.",
+    "/api/calibration/{id} returns {} instead of 404 when missing — minor REST hygiene.",
+    "CORS allow_origins=['*'] with allow_credentials=True is technically invalid per spec; OK here since no auth/cookies, but should be tightened if auth is added.",
+    "server.py ~810 lines — borderline for splitting into routers/torah.py, routers/sessions.py.",
+    "PARSHIYOT/HAFTAROT/HEBREW_BOOK_NAMES tables would be cleaner in a constants module or JSON file; currently embedded in server.py."
+  ],
+  "updated_files": ["/app/backend/tests/test_torah_api.py"],
+  "success_rate": {"backend": "100% (24/24)", "frontend": "n/a (skipped per request)"},
+  "test_credentials": "none required",
+  "seed_data_creation": "Created 2 TEST_-prefixed sessions (TEST_session, TEST_calib) and 1 calibration document; small footprint, not cleaned up.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Bundled corpus at /app/backend/data/torah_corpus.json (3.9 MB, 15887 verses across 31 books: 5 Torah + 21 Nevi'im + 5 Megillot). /api/torah/books now returns dict {torah,neviim,megillot} not a flat list — old clients expecting list will break. /api/torah/lines now returns category and haftarah_for; previous/next traversal is constrained to same book (verified via Esther 1:1 prev=[]). All offline; no Sefaria runtime calls observed. 24-test pytest suite at /app/backend/tests/test_torah_api.py is the regression baseline.",
+  "rca of the issue": "n/a — no failures."
+}

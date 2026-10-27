@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: #F5F2EB;
+  color: #1A1A1A;
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.font-hebrew {
+  font-family: "Noto Serif Hebrew", "Frank Ruhl Libre", "SBL Hebrew", "David Libre", serif;
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+
+/* Parchment background texture (very subtle) */
+.parchment-bg {
+  background-color: #F5F2EB;
+  background-image:
+    radial-gradient(rgba(184, 134, 11, 0.04) 1px, transparent 1px),
+    radial-gradient(rgba(92, 92, 92, 0.03) 1px, transparent 1px);
+  background-size: 28px 28px, 9px 9px;
+  background-position: 0 0, 14px 14px;
+}
+
+/* Hebrew text with cantillation needs ample line height */
+.hebrew-line {
+  direction: rtl;
+  unicode-bidi: embed;
+  line-height: 2.0;
+  letter-spacing: 0.01em;
+  font-family: "Noto Serif Hebrew", "Frank Ruhl Libre", "SBL Hebrew", "Times New Roman", serif;
+}
+
+/* Active line - large, bold, ink-black */
+.hebrew-active {
+  font-size: clamp(2rem, 5.2vw, 3.4rem);
+  font-weight: 700;
+  color: #1A1A1A;
+}
+
+.hebrew-context {
+  font-size: clamp(1.25rem, 2.6vw, 1.75rem);
+  color: #8B8377;
+  font-weight: 400;
+}
+
+/* Projector-mode text */
+.projector-text {
+  color: #FFD700;
+  font-family: "Noto Serif Hebrew", "Frank Ruhl Libre", "SBL Hebrew", serif;
+  direction: rtl;
+  text-shadow: 0 0 6px rgba(255, 215, 0, 0.35);
+  line-height: 2.05;
+}
+
+.projector-text.context {
+  color: rgba(255, 215, 0, 0.45);
+}
+
+/* Status pill */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid #E5E0D3;
+  background: #FCFAF5;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #5C5C5C;
+}
+.status-pill .dot {
+  width: 8px; height: 8px; border-radius: 999px; background: #B8860B;
+}
+.status-pill.ok .dot { background: #2E7D32; }
+.status-pill.warn .dot { background: #E65100; }
+.status-pill.idle .dot { background: #B8B0A0; }
+
+/* Calibration corner handle */
+.calib-handle {
+  position: absolute;
+  width: 56px; height: 56px;
+  border: 2px solid #FFD700;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.4);
+  transform: translate(-50%, -50%);
+  display: flex; align-items: center; justify-content: center;
+  cursor: grab;
+  touch-action: none;
+}
+.calib-handle::after {
+  content: ""; width: 6px; height: 6px; background: #FFD700; border-radius: 999px;
+}
+
+/* Subtle pulse for calibration */
+@keyframes calibPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.6); }
+  50% { box-shadow: 0 0 0 14px rgba(255, 215, 0, 0); }
+}
+.calib-handle { animation: calibPulse 2.4s ease-in-out infinite; }
+
+/* Reticle SVG container */
+.reticle {
+  position: absolute; inset: 0;
+  pointer-events: none;
+}
+
+/* Hide scrollbars on session screen */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

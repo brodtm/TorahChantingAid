@@ -1,0 +1,85 @@
+{
+  "theme": "Light & Dark Dual Mode",
+  "archetype": "1 (Organic & Earthy)",
+  "rationale": "The phone app requires a warm, classical, dignified parchment aesthetic suitable for reading sacred text (Organic & Earthy). The projector route requires an inverted, pure black background (high-contrast dark mode) to successfully map ONLY the yellow/white cantillation marks onto the physical Torah without projecting a distracting light box.",
+  "typography": {
+    "fonts": {
+      "hebrew_display": "Frank Ruhl Libre",
+      "hebrew_fallback": "David Libre, serif",
+      "english_heading": "Cormorant Garamond, serif",
+      "english_body": "Inter, sans-serif"
+    },
+    "scale": {
+      "h1": "text-3xl sm:text-4xl tracking-tight",
+      "h2": "text-2xl sm:text-3xl tracking-tight",
+      "hebrew_active_line": "text-5xl sm:text-6xl font-bold leading-relaxed",
+      "hebrew_context_line": "text-3xl sm:text-4xl text-neutral-500 leading-relaxed",
+      "body": "text-base",
+      "labels": "text-xs tracking-[0.2em] uppercase"
+    },
+    "rules": [
+      "Hebrew text MUST have proper RTL direction (`dir='rtl'`).",
+      "Line height for Hebrew must be generous (`leading-relaxed` or `leading-loose`) to accommodate te'amim (cantillation marks) above and below the letters.",
+      "Never use decorative English fonts for functional status labels."
+    ]
+  },
+  "colors": {
+    "phone_ui": {
+      "background": "#F5F2EB",
+      "surface": "#FCFAF5",
+      "text_primary": "#1A1A1A",
+      "text_secondary": "#5C5C5C",
+      "accent": "#B8860B",
+      "border": "#E5E0D3",
+      "success": "#2E7D32",
+      "warning": "#E65100"
+    },
+    "projector_ui": {
+      "background": "#000000",
+      "text_trope": "#FFD700",
+      "text_debug": "#FFFFFF"
+    }
+  },
+  "spacing_and_layout": {
+    "philosophy": "Generous and uncluttered. The layout must allow the chanter to focus strictly on the text without visual noise.",
+    "phone_grid": "Bento-style for setup, switching to a focused vertical stack for the reading session.",
+    "projector_grid": "Absolute positioning based on affine transform coordinates. No standard grids.",
+    "containers": "Use `p-6` or `p-8` for status cards. The active line view needs `py-12` to stand out."
+  },
+  "components": {
+    "strategy": "Shadcn/UI customized with classic borders (1px solid #E5E0D3) and zero shadow for a matte, paper-like feel.",
+    "status_indicators": "Subtle pills. Green dot for 'Torah Detected', Amber for 'Searching...'",
+    "camera_viewfinder": "Raw video feed layer with a digital reticle overlay (svg path, stroke-accent).",
+    "calibration_ui": "4-corner tap target UI layered over the camera. Draggable points using Framer Motion or native pointer events.",
+    "projector_output": "Minimal unstyled route. Absolutely no chrome, nav, or borders. Pure black background."
+  },
+  "motion": {
+    "rules": [
+      "Zero distracting animations during the reading session.",
+      "Calibration points can have a subtle `pulse` to indicate interactivity.",
+      "Line transitions (advancing to next line) should use a very slow, smooth `transform: translateY` (0.5s ease-out) so the chanter's eye isn't jarred."
+    ]
+  },
+  "media": {
+    "image_urls": [
+      {
+        "url": "https://images.pexels.com/photos/235985/pexels-photo-235985.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "High-resolution vintage parchment texture",
+        "category": "background_texture",
+        "usage": "Use as a very low opacity background (e.g., `opacity-5` to `opacity-10`) layered via CSS blend modes on the setup/session screen to add an organic feel without compromising readability."
+      }
+    ]
+  },
+  "accessibility": {
+    "contrast": "Maintain strictly high contrast. Trope marks on projector must be pure yellow/white against pure black to ensure light maps properly onto physical parchment.",
+    "testing": "All key components must include `data-testid` (e.g., `data-testid='session-start-button'`, `data-testid='calibration-corner-tl'`)."
+  },
+  "instructions_to_main_agent": [
+    "Build the app in two main contexts: 1) The Mobile PWA Setup/Reading Interface, 2) The Projector interface (`/projector`).",
+    "Ensure Shadcn components are modified to remove the default 'tech' glow and shadows. Use flat, warm tones for the mobile app.",
+    "For the Hebrew typography, ensure `Frank Ruhl Libre` is imported from Google Fonts. Include it in the tailwind config and use proper classes for Hebrew lines.",
+    "Implement the calibration UI using SVG overlays or absolute positioned divs that capture touch events for the 4 corners.",
+    "The `/projector` route must be pure black with zero UI padding or containers, as any non-black pixel will project visible light onto the physical Torah.",
+    "Add `data-testid` to all interactive elements such as buttons, toggles, and calibration nodes."
+  ]
+}

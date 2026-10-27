@@ -1,0 +1,34 @@
+{
+  "summary": "Backend pytest suite for Torah Chanting Aid: 15/15 tests passed against external preview URL. Validated health, index build (~5846 verses), books, parshiyot (54), chapter retrieval w/ cantillation, locate (full snippet, 3-word snippet, hint_book, <4 chars 400), lines (active+prev+next w/ te'amim, 404), sessions CRUD (UUID, no ObjectId), calibration save+fetch, and CORS.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/calibration/{session_id}", "issue": "Returns empty {} on missing session instead of 404 — minor REST hygiene issue, but matches current spec."},
+      {"endpoint": "/api/torah/locate", "issue": "When no match (best_score < 0.2) returns null body with 200; clients must handle null. Could be 404 instead."}
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_torah_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "estimate_aliyah double-iterates _unvocalized_index (O(N) twice per call) and computes 'total' incorrectly (it adds to existing count) — works because of >> verses but math is misleading. Acceptable as a heuristic but worth a refactor.",
+    "/api/calibration/{id} returns {} instead of 404 when no calibration exists; consider HTTP 404 for consistency.",
+    "/api/torah/locate returns null body with 200 when no match — clients may break on null parsing; consider 404 or a structured {found: false}.",
+    "CORS allow_origins=['*'] with allow_credentials=True is technically invalid per spec (browsers ignore credentials with wildcard). OK for this app since no auth/cookies.",
+    "server.py is ~600 lines — borderline; future split into routers/torah.py, routers/sessions.py recommended.",
+    "build_index_for_book silently returns on Sefaria failure; first /api/index/build could succeed-with-zero-verses if Sefaria is down. Consider raising HTTPException so health endpoint reflects reality."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_torah_api.py"
+  ],
+  "success_rate": {"backend": "100%", "frontend": "n/a (skipped per request)"},
+  "test_credentials": "none required",
+  "seed_data_creation": "Created TEST_-prefixed sessions and calibrations during runs (not cleaned up; small footprint).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Index build is cached in-memory; first /api/index/build hits Sefaria (~5846 verses) and takes time. Subsequent calls are instant. ObjectId hygiene verified across sessions/calibration. Tests pass against the public preview URL. If Sefaria is rate-limited, the index endpoint may degrade silently — reproduce by checking /api/health indexed_verses count.",
+  "rca of the issue": "n/a — no failures."
+}
